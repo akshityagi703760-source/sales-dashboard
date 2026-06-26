@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaSify - Sales Performance Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons for premium visual cues -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.8);
+        }
+    </style>
+    <!-- Configure Tailwind with custom dark mode support -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Navigation / Header -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 px-4 py-3 flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-3">
+            <div class="bg-primary-600 p-2 rounded-xl text-white">
+                <i data-lucide="trending-up" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">SaaSify</h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Sales Analytics Portal</p>
+            </div>
+        </div>
+
+        <!-- Quick actions/Toggles -->
+        <div class="flex items-center space-x-3">
+            <!-- Learning Guide Toggle (Highly useful for Beginners) -->
+            <button onclick="toggleDevGuide()" class="text-xs px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/50 dark:text-yellow-200 font-medium rounded-lg flex items-center space-x-1.5 transition">
+                <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Developer Notes</span>
+            </button>
+
+            <!-- Dark/Light Theme Toggle -->
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition text-gray-600 dark:text-gray-300">
+                <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Profile Widget -->
+            <div class="flex items-center space-x-2 border-l border-gray-200 dark:border-gray-700 pl-3">
+                <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-semibold text-sm">
+                    JD
+                </div>
+                <div class="hidden md:block text-left">
+                    <p class="text-xs font-semibold leading-3">Jane Doe</p>
+                    <span class="text-[10px] text-gray-500">Sales Manager</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 space-y-6">
+
+        <!-- Developer Guide (Collapsible Component) -->
+        <div id="dev-guide" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 dark:from-slate-800 dark:to-slate-800/80 dark:border-slate-700 rounded-xl p-5 shadow-inner relative">
+            <button onclick="toggleDevGuide()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-start space-x-3">
+                <div class="p-2 bg-blue-500 text-white rounded-lg mt-0.5">
+                    <i data-lucide="terminal" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-200">Interactive Learning Sandbox: How this works under the hood</h3>
+                    <p class="text-xs text-blue-700 dark:text-gray-300 mt-1 leading-relaxed">
+                        This dashboard is structured to demonstrate reactive state management with pure JavaScript. When filters are customized or a new transaction is simulated/inserted:
+                    </p>
+                    <ul class="list-disc list-inside text-xs text-blue-800 dark:text-gray-400 mt-2 space-y-1">
+                        <li><strong>Data Mutation pipeline:</strong> The master array <code>SALES_DATA</code> changes.</li>
+                        <li><strong>Filter Stream:</strong> An evaluation function runs array transformations dynamically checking Date, Segment, and Product Type selectors.</li>
+                        <li><strong>Reactive Rendering:</strong> Charts are explicitly destroyed and rebuilt with updated contexts to prevent visual overlapping on canvas elements.</li>
+                        <li><strong>Export Pipeline:</strong> The dynamic dataset is converted to a CSV payload strictly on the client side using string buffers.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action bar / Filters -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            <!-- Quick filters -->
+            <div class="grid grid-cols-2 md:flex md:items-center gap-3 w-full md:w-auto">
+                <!-- Date Filter -->
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1">Timeframe</label>
+                    <select id="filter-date" onchange="applyFilters()" class="text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-600 transition">
+                        <option value="all">All-Time History</option>
+                        <option value="ytd">Year to Date (YTD)</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="7days" selected>Last 7 Days</option>
+                    </select>
+                </div>
+
+                <!-- Region Filter -->
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1">Region</label>
+                    <select id="filter-region" onchange="applyFilters()" class="text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-600 transition">
+                        <option value="all">All Regions</option>
+                        <option value="North">North America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Asia">Asia-Pacific</option>
+                        <option value="LatAm">Latin America</option>
+                    </select>
+                </div>
+
+                <!-- Product Category Filter -->
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 tracking-wider mb-1">Category</label>
+                    <select id="filter-category" onchange="applyFilters()" class="text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-600 transition">
+                        <option value="all">All Segments</option>
+                        <option value="SaaS Subscription">SaaS Licenses</option>
+                        <option value="Enterprise Solution">Enterprise Contracts</option>
+                        <option value="Consulting">Professional Services</option>
+                        <option value="API Access">Metered APIs</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Interactivity buttons -->
+            <div class="flex items-center space-x-2 self-end w-full md:w-auto justify-end">
+                <!-- Open New Sale Modal Trigger -->
+                <button onclick="toggleSaleModal()" class="w-full sm:w-auto px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-primary-600/20">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Log Transaction</span>
+                </button>
+
+                <!-- CSV Exporter -->
+                <button onclick="exportData()" class="px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-white rounded-lg font-medium text-sm transition flex items-center justify-center" title="Export current filtered data to CSV">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Mock Generator -->
+                <button onclick="generateFreshDataset()" class="px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-white rounded-lg font-medium text-sm transition flex items-center justify-center" title="Regenerate random demo dataset">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast Notification Element -->
+        <div id="toast" class="hidden fixed bottom-5 right-5 z-50 transform translate-y-10 opacity-0 transition-all duration-300 bg-gray-900 text-white dark:bg-white dark:text-gray-900 py-3 px-5 rounded-xl shadow-2xl flex items-center space-x-2 text-sm border border-gray-700/15">
+            <span id="toast-icon">✨</span>
+            <span id="toast-message" class="font-medium">Data updated successfully!</span>
+        </div>
+
+        <!-- KPI Performance Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Revenue -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Total Revenue</span>
+                    <h2 id="kpi-revenue" class="text-2xl font-bold tracking-tight">$0.00</h2>
+                    <div id="trend-revenue" class="flex items-center text-xs font-medium space-x-1">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                <div class="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-lg">
+                    <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Total Transactions -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Transactions</span>
+                    <h2 id="kpi-orders" class="text-2xl font-bold tracking-tight">0</h2>
+                    <div id="trend-orders" class="flex items-center text-xs font-medium space-x-1">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                <div class="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3 rounded-lg">
+                    <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Average Contract Value (ACV) -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Average Deal Value</span>
+                    <h2 id="kpi-acv" class="text-2xl font-bold tracking-tight">$0.00</h2>
+                    <div id="trend-acv" class="flex items-center text-xs font-medium space-x-1">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                <div class="bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 p-3 rounded-lg">
+                    <i data-lucide="pie-chart" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Customer Conversion Rate (Simulated metric based on data profile) -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Target Conversion</span>
+                    <h2 id="kpi-conversion" class="text-2xl font-bold tracking-tight">0.0%</h2>
+                    <div id="trend-conversion" class="flex items-center text-xs font-medium space-x-1">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                <div class="bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 p-3 rounded-lg">
+                    <i data-lucide="target" class="w-6 h-6"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizations Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Revenue Trend over Time (Large Span) -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white">Revenue Development</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Total transaction performance across selected interval</p>
+                    </div>
+                    <span class="text-[10px] uppercase font-bold text-primary-600 bg-primary-50 dark:bg-primary-950/50 dark:text-primary-400 px-2 py-1 rounded">Daily Tracking</span>
+                </div>
+                <div class="relative h-64 sm:h-72">
+                    <canvas id="chart-revenue-trend"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Breakdown (Doughnut) -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white">Product Share</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Revenue split dynamically sorted by category</p>
+                    </div>
+                </div>
+                <div class="relative h-64 sm:h-72 flex items-center justify-center">
+                    <canvas id="chart-product-share"></canvas>
+                </div>
+            </div>
+
+            <!-- Regional breakdown and Top Performing Channels (Horizontal bars) -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm lg:col-span-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white">Geographic Split</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Regional sales volumes relative to goal</p>
+                    </div>
+                </div>
+                <div class="relative h-64 flex items-center justify-center">
+                    <canvas id="chart-region"></canvas>
+                </div>
+            </div>
+
+            <!-- Representative Sales Agent Leaderboard -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white">Enterprise Client Pipeline</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Top-tier contracts categorized by contract scale</p>
+                    </div>
+                    <div class="flex items-center space-x-1.5 text-xs font-semibold text-gray-500">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        <span>Direct sales only</span>
+                    </div>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="chart-leaderboard"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Table Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-gray-900 dark:text-white">Transaction Logs</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Detailed log representing live state memory array</p>
+                </div>
+
+                <!-- Live Table Search and Controls -->
+                <div class="flex items-center space-x-2">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input id="table-search" oninput="applyFilters()" type="text" placeholder="Search orders..." class="text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg pl-9 pr-4 py-2 outline-none focus:ring-2 focus:ring-primary-600 w-full sm:w-60 transition">
+                    </div>
+                    <!-- Sort Key -->
+                    <select id="table-sort" onchange="applyFilters()" class="text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-600 transition">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="high-value">Highest Value</option>
+                        <option value="low-value">Lowest Value</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Responsive Table Element -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 dark:bg-gray-700/50 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                            <th class="py-3 px-5">ID Code</th>
+                            <th class="py-3 px-5">Client Name</th>
+                            <th class="py-3 px-5">Category</th>
+                            <th class="py-3 px-5">Region</th>
+                            <th class="py-3 px-5">Timestamp</th>
+                            <th class="py-3 px-5 text-right">Revenue (USD)</th>
+                            <th class="py-3 px-5 text-center">Payment Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-table-body" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                        <!-- Injected dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table empty state screen representation -->
+            <div id="table-empty-state" class="hidden flex flex-col items-center justify-center p-10 text-center space-y-3">
+                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-400">
+                    <i data-lucide="alert-circle" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 dark:text-gray-200">No transactions match the filter parameters</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">Try broadening your active select menus or searching for general text queries instead.</p>
+                </div>
+            </div>
+
+            <!-- Pagination block footer -->
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs">
+                <span id="pagination-info" class="font-medium text-gray-500 dark:text-gray-400">Showing page 1 of 1</span>
+                <div class="flex items-center space-x-2">
+                    <button id="btn-prev-page" onclick="prevPage()" class="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50">Previous</button>
+                    <button id="btn-next-page" onclick="nextPage()" class="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50">Next</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Document Footer -->
+    <footer class="bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 SaaSify Business Systems Inc. All rights reserved.</p>
+            <div class="flex space-x-4">
+                <a href="#" class="hover:underline hover:text-primary-600">Privacy Policy</a>
+                <span>•</span>
+                <a href="#" class="hover:underline hover:text-primary-600">Terms of Service</a>
+                <span>•</span>
+                <a href="#" class="hover:underline hover:text-primary-600">API Documentation</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal: Add New Transaction Entry -->
+    <div id="modal-sale" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-gray-200 dark:border-gray-700 transform scale-95 transition-all duration-300">
+            <!-- Modal Close Button -->
+            <button onclick="toggleSaleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="mb-5">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Record Sale</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Inserts data item into current workspace session state.</p>
+            </div>
+
+            <!-- Form Body -->
+            <form id="form-add-sale" onsubmit="submitNewSale(event)" class="space-y-4">
+                <!-- Client Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Customer / Enterprise Org</label>
+                    <input type="text" id="sale-client" required placeholder="e.g. Acme Corp Inc." class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary-600 transition">
+                </div>
+
+                <!-- Product Category & Region Row -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Category</label>
+                        <select id="sale-category" required class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary-600 transition">
+                            <option value="SaaS Subscription">SaaS Subscription</option>
+                            <option value="Enterprise Solution">Enterprise Solution</option>
+                            <option value="Consulting">Professional Consulting</option>
+                            <option value="API Access">Metered API Access</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Region</label>
+                        <select id="sale-region" required class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary-600 transition">
+                            <option value="North">North America</option>
+                            <option value="Europe">Europe</option>
+                            <option value="Asia">Asia-Pacific</option>
+                            <option value="LatAm">Latin America</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Revenue Field -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Revenue Value (USD)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">$</span>
+                        <input type="number" id="sale-revenue" required min="1" step="0.01" placeholder="99.99" class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg pl-8 pr-4 py-2 outline-none focus:ring-2 focus:ring-primary-600 transition">
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Transaction Date</label>
+                    <input type="date" id="sale-date" required class="w-full text-sm bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary-600 transition">
+                </div>
+
+                <!-- Footer buttons inside Form -->
+                <div class="flex items-center space-x-2 pt-4">
+                    <button type="button" onclick="toggleSaleModal()" class="w-1/2 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-lg text-sm font-semibold transition text-center">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold transition shadow-lg shadow-primary-600/20">
+                        Record Deal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Master memory state variables
+        let SALES_DATA = [];
+        let filteredData = [];
+        let theme = 'light';
+        
+        // Pagination state variables
+        let currentPage = 1;
+        const rowsPerPage = 5;
+
+        // Chart References stored globally for dynamic rebuild
+        let chartInstances = {
+            revenueTrend: null,
+            productShare: null,
+            regionalSplit: null,
+            leaderboard: null
+        };
+
+        // Standard categories for visual themes mapping
+        const CATEGORIES = ["SaaS Subscription", "Enterprise Solution", "Consulting", "API Access"];
+        const REGIONS = ["North", "Europe", "Asia", "LatAm"];
+        const CLIENT_SAMPLE_POOL = [
+            "Alpha Services", "Apex Digital", "BlueStar Corp", "Cascade LLC", "Delta Partners",
+            "Epoch Solutions", "FutureVision", "Genesis Group", "Hyperion Systems", "Infinity Labs",
+            "Juniper Systems", "Keystone Dev", "Lumina Media", "Matrix Software", "Nova Enterprises"
+        ];
+
+        /* Utility to output current date strings dynamically */
+        function formatDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Generate synthetic mock dataset representation (Beginner-friendly structure)
+        function generateFreshDataset() {
+            SALES_DATA = [];
+            const now = new Date();
+            
+            // Generate 35 sales transactions spanning across consecutive past 45 days
+            for(let i = 0; i < 35; i++) {
+                const randomOffset = Math.floor(Math.random() * 45); // offset in days
+                const itemDate = new Date();
+                itemDate.setDate(now.getDate() - randomOffset);
+                
+                // Scale random prices appropriately by selected Product Category
+                const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+                let revenue = 0;
+                if(cat === 'Enterprise Solution') {
+                    revenue = parseFloat((Math.random() * 10000 + 5000).toFixed(2));
+                } else if(cat === 'SaaS Subscription') {
+                    revenue = parseFloat((Math.random() * 1200 + 150).toFixed(2));
+                } else if(cat === 'Consulting') {
+                    revenue = parseFloat((Math.random() * 4000 + 800).toFixed(2));
+                } else {
+                    revenue = parseFloat((Math.random() * 500 + 50).toFixed(2));
+                }
+
+                SALES_DATA.push({
+                    id: 'SL-' + Math.floor(100000 + Math.random() * 900000),
+                    clientName: CLIENT_SAMPLE_POOL[Math.floor(Math.random() * CLIENT_SAMPLE_POOL.length)],
+                    category: cat,
+                    region: REGIONS[Math.floor(Math.random() * REGIONS.length)],
+                    date: formatDateString(itemDate),
+                    revenue: revenue,
+                    status: Math.random() > 0.15 ? 'Cleared' : 'Pending'
+                });
+            }
+
+            // Default Sort chronological
+            SALES_DATA.sort((a, b) => new Date(b.date) - new Date(a.date));
+            showToast("✨ Generated random demo transactional data!");
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const timeFilter = document.getElementById('filter-date').value;
+            const regionFilter = document.getElementById('filter-region').value;
+            const categoryFilter = document.getElementById('filter-category').value;
+            const searchVal = document.getElementById('table-search').value.toLowerCase();
+            const sortVal = document.getElementById('table-sort').value;
+
+            const now = new Date();
+
+            // Run structural dataset pipeline filtering
+            filteredData = SALES_DATA.filter(sale => {
+                // 1. Date filter evaluations
+                const saleDate = new Date(sale.date);
+                if (timeFilter === '7days') {
+                    const diffTime = Math.abs(now - saleDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > 7) return false;
+                } else if (timeFilter === '30days') {
+                    const diffTime = Math.abs(now - saleDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > 30) return false;
+                } else if (timeFilter === 'ytd') {
+                    if (saleDate.getFullYear() !== now.getFullYear()) return false;
+                }
+
+                // 2. Region validation
+                if (regionFilter !== 'all' && sale.region !== regionFilter) {
+                    return false;
+                }
+
+                // 3. Category matching
+                if (categoryFilter !== 'all' && sale.category !== categoryFilter) {
+                    return false;
+                }
+
+                // 4. Elastic Search Text Match (Client code / Client Name)
+                if (searchVal && !sale.clientName.toLowerCase().includes(searchVal) && !sale.id.toLowerCase().includes(searchVal)) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Apply Sorting mechanics onto output array
+            if(sortVal === 'newest') {
+                filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else if(sortVal === 'oldest') {
+                filteredData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            } else if(sortVal === 'high-value') {
+                filteredData.sort((a, b) => b.revenue - a.revenue);
+            } else if(sortVal === 'low-value') {
+                filteredData.sort((a, b) => a.revenue - b.revenue);
+            }
+
+            // Reset pagination view index representation back to page 1 on active transformation
+            currentPage = 1;
+            
+            // Complete data bind loop
+            updateKPIs();
+            renderCharts();
+            renderTable();
+        }
+
+        function updateKPIs() {
+            // Aggregate totals from active array pointer
+            const totalRevenue = filteredData.reduce((acc, current) => acc + current.revenue, 0);
+            const totalOrders = filteredData.length;
+            const acv = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
+            
+            // Dynamic Conversion calculations representation
+            const conversionRate = totalOrders > 0 ? Math.min((totalRevenue / 110000) * 100, 100).toFixed(1) : 0;
+
+            // Render elements contents
+            document.getElementById('kpi-revenue').textContent = `$${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpi-orders').textContent = totalOrders.toLocaleString('en-US');
+            document.getElementById('kpi-acv').textContent = `$${acv.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpi-conversion').textContent = `${conversionRate}%`;
+
+            // Calculate trends relative to baseline totals representation (Pre-assigned baselines)
+            updateTrendElement('trend-revenue', totalRevenue, 45000);
+            updateTrendElement('trend-orders', totalOrders, 12);
+            updateTrendElement('trend-acv', acv, 2400);
+            updateTrendElement('trend-conversion', parseFloat(conversionRate), 65);
+        }
+
+        function updateTrendElement(elementId, currentValue, baseline) {
+            const el = document.getElementById(elementId);
+            const percentChange = baseline > 0 ? (((currentValue - baseline) / baseline) * 100).toFixed(1) : 0;
+            
+            if (percentChange >= 0) {
+                el.className = "flex items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1";
+                el.innerHTML = `
+                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5"></i>
+                    <span>+${percentChange}%</span>
+                    <span class="text-gray-400 dark:text-gray-500 font-normal ml-1">vs target</span>
+                `;
+            } else {
+                el.className = "flex items-center text-xs font-semibold text-rose-600 dark:text-rose-400 mt-1";
+                el.innerHTML = `
+                    <i data-lucide="arrow-down-left" class="w-3.5 h-3.5 mr-0.5"></i>
+                    <span>${percentChange}%</span>
+                    <span class="text-gray-400 dark:text-gray-500 font-normal ml-1">vs target</span>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        function renderCharts() {
+            // Retrieve current systems dark mode state
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 0.7)';
+            const textColor = isDark ? '#9ca3af' : '#4b5563';
+
+            // --- Chart 1: Revenue Line development over Time ---
+            // Prepare dates index map representation sorted chronologically for trending charts
+            const sortedByDate = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const dateRevenueMap = {};
+            sortedByDate.forEach(item => {
+                // Shorten output label format (e.g. "Jun 24")
+                const parsedDate = new Date(item.date);
+                const label = parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                dateRevenueMap[label] = (dateRevenueMap[label] || 0) + item.revenue;
+            });
+
+            const lineLabels = Object.keys(dateRevenueMap);
+            const lineValues = Object.values(dateRevenueMap);
+
+            if (chartInstances.revenueTrend) {
+                chartInstances.revenueTrend.destroy();
+            }
+
+            const ctxLine = document.getElementById('chart-revenue-trend').getContext('2d');
+            chartInstances.revenueTrend = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: lineLabels,
+                    datasets: [{
+                        label: 'Gross Vol (USD)',
+                        data: lineValues,
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#7c3aed',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                            titleColor: isDark ? '#f9fafb' : '#111827',
+                            bodyColor: isDark ? '#d1d5db' : '#374151',
+                            borderColor: isDark ? '#374151' : '#e5e7eb',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return `$${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            // --- Chart 2: Category Share (Doughnut) ---
+            const catMap = {};
+            CATEGORIES.forEach(cat => catMap[cat] = 0);
+            filteredData.forEach(item => {
+                if(catMap[item.category] !== undefined) {
+                    catMap[item.category] += item.revenue;
+                }
+            });
+
+            if (chartInstances.productShare) {
+                chartInstances.productShare.destroy();
+            }
+
+            const ctxDoughnut = document.getElementById('chart-product-share').getContext('2d');
+            chartInstances.productShare = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catMap),
+                    datasets: [{
+                        data: Object.values(catMap),
+                        backgroundColor: ['#7c3aed', '#06b6d4', '#10b981', '#f59e0b'],
+                        borderWidth: isDark ? 2 : 1,
+                        borderColor: isDark ? '#1f2937' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                boxWidth: 12,
+                                font: { family: 'Inter', size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = sum > 0 ? ((context.raw / sum) * 100).toFixed(1) : 0;
+                                    return ` $${context.raw.toLocaleString()} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // --- Chart 3: Region Split (Radar / Horizontal Bar alternative) ---
+            const regMap = {};
+            REGIONS.forEach(reg => regMap[reg] = 0);
+            filteredData.forEach(item => {
+                if(regMap[item.region] !== undefined) {
+                    regMap[item.region] += item.revenue;
+                }
+            });
+
+            if (chartInstances.regionalSplit) {
+                chartInstances.regionalSplit.destroy();
+            }
+
+            const ctxRegion = document.getElementById('chart-region').getContext('2d');
+            chartInstances.regionalSplit = new Chart(ctxRegion, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(regMap),
+                    datasets: [{
+                        label: 'Total Revenue',
+                        data: Object.values(regMap),
+                        backgroundColor: ['#6366f1', '#3b82f6', '#14b8a6', '#f43f5e'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            // --- Chart 4: Leaderboard Horizontal Metric (Simulating Sales performance) ---
+            // Aggregate revenue performance strictly by individual clients context
+            const clientPerfMap = {};
+            filteredData.forEach(item => {
+                clientPerfMap[item.clientName] = (clientPerfMap[item.clientName] || 0) + item.revenue;
+            });
+
+            // Sort top performing list entries
+            const sortedClients = Object.entries(clientPerfMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const barLabels = sortedClients.map(item => item[0]);
+            const barValues = sortedClients.map(item => item[1]);
+
+            if (chartInstances.leaderboard) {
+                chartInstances.leaderboard.destroy();
+            }
+
+            const ctxLeaderboard = document.getElementById('chart-leaderboard').getContext('2d');
+            chartInstances.leaderboard = new Chart(ctxLeaderboard, {
+                type: 'bar',
+                data: {
+                    labels: barLabels.length > 0 ? barLabels : ['No Client Transactions'],
+                    datasets: [{
+                        label: 'Contract Scale',
+                        data: barValues.length > 0 ? barValues : [0],
+                        backgroundColor: 'rgba(99, 102, 241, 0.85)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barThickness: 16
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('sales-table-body');
+            const emptyState = document.getElementById('table-empty-state');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                emptyState.classList.remove('hidden');
+                document.getElementById('pagination-info').textContent = "Showing page 0 of 0";
+                document.getElementById('btn-prev-page').disabled = true;
+                document.getElementById('btn-next-page').disabled = true;
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Slice data index elements for active view parameters
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            pageData.forEach(sale => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/40 transition duration-150";
+
+                // Map styling context relative to regions badges
+                let regionBadgeClass = "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+                if(sale.region === 'North') regionBadgeClass = "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400";
+                else if(sale.region === 'Europe') regionBadgeClass = "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400";
+                else if(sale.region === 'Asia') regionBadgeClass = "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400";
+                else if(sale.region === 'LatAm') regionBadgeClass = "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400";
+
+                const isCleared = sale.status === 'Cleared';
+                const statusBadge = isCleared 
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Cleared</span>`
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>Pending</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-5 font-mono text-xs font-bold text-gray-400">${sale.id}</td>
+                    <td class="py-3 px-5 font-semibold text-gray-900 dark:text-white">${sale.clientName}</td>
+                    <td class="py-3 px-5 text-xs text-gray-500 dark:text-gray-400">${sale.category}</td>
+                    <td class="py-3 px-5">
+                        <span class="px-2 py-1 rounded-md text-xs font-semibold ${regionBadgeClass}">${sale.region}</span>
+                    </td>
+                    <td class="py-3 px-5 text-xs text-gray-500">${sale.date}</td>
+                    <td class="py-3 px-5 text-right font-bold text-gray-900 dark:text-white">$${sale.revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="py-3 px-5 text-center">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update footer metrics and pagination state displays
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            document.getElementById('pagination-info').textContent = `Showing ${startIndex + 1} to ${Math.min(endIndex, filteredData.length)} of ${filteredData.length} records (Page ${currentPage} of ${totalPages})`;
+
+            document.getElementById('btn-prev-page').disabled = currentPage === 1;
+            document.getElementById('btn-next-page').disabled = currentPage === totalPages;
+        }
+
+        // Table UI Navigation functions
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function toggleSaleModal() {
+            const modal = document.getElementById('modal-sale');
+            if(modal.classList.contains('hidden')) {
+                // Pre-populate date picker with current systems date as smart default
+                document.getElementById('sale-date').value = formatDateString(new Date());
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.querySelector('.bg-white, .dark\\:bg-gray-800').classList.remove('scale-95');
+                    modal.querySelector('.bg-white, .dark\\:bg-gray-800').classList.add('scale-100');
+                }, 10);
+            } else {
+                modal.querySelector('.bg-white, .dark\\:bg-gray-800').classList.remove('scale-100');
+                modal.querySelector('.bg-white, .dark\\:bg-gray-800').classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 150);
+            }
+        }
+
+        // Action when form submits new custom data element
+        function submitNewSale(event) {
+            event.preventDefault();
+            
+            const client = document.getElementById('sale-client').value.trim();
+            const cat = document.getElementById('sale-category').value;
+            const reg = document.getElementById('sale-region').value;
+            const revVal = parseFloat(document.getElementById('sale-revenue').value);
+            const rawDate = document.getElementById('sale-date').value;
+
+            // Simple validation assertion inside inline modal context
+            if(!client || isNaN(revVal) || !rawDate) {
+                showToast("❌ Please complete all fields before storing.");
+                return;
+            }
+
+            const newObject = {
+                id: 'SL-' + Math.floor(100000 + Math.random() * 900000),
+                clientName: client,
+                category: cat,
+                region: reg,
+                date: rawDate,
+                revenue: revVal,
+                status: 'Cleared' // Defaults automatically cleared on manual log ins
+            };
+
+            // Prepends to active system tracking lists array
+            SALES_DATA.unshift(newObject);
+            
+            // Clean modal states
+            toggleSaleModal();
+            document.getElementById('form-add-sale').reset();
+
+            // Re-apply filter streams immediately to reflect updates on active viewports
+            applyFilters();
+            showToast(`🚀 Logged $${revVal.toLocaleString()} deal for ${client}!`);
+        }
+
+        function exportData() {
+            if(filteredData.length === 0) {
+                showToast("⚠️ There is no active dataset available to download.");
+                return;
+            }
+
+            // Build structural CSV file format manually matching schema columns
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Transaction ID,Client Name,Category,Region,Date,Revenue USD,Status\n";
+
+            filteredData.forEach(sale => {
+                // Escape simple quotes and commas inside inputs
+                const cleanedClient = sale.clientName.replace(/"/g, '""');
+                csvContent += `"${sale.id}","${cleanedClient}","${sale.category}","${sale.region}","${sale.date}",${sale.revenue},"${sale.status}"\n`;
+            });
+
+            // Browser download triggers
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `saasify_export_${formatDateString(new Date())}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("💾 Saved CSV file successfully!");
+        }
+
+        function toggleDevGuide() {
+            const pane = document.getElementById('dev-guide');
+            pane.classList.toggle('hidden');
+        }
+
+        function toggleTheme() {
+            const htmlClass = document.documentElement.classList;
+            const icon = document.getElementById('theme-icon');
+
+            if (htmlClass.contains('dark')) {
+                htmlClass.remove('dark');
+                icon.setAttribute('data-lucide', 'sun');
+                theme = 'light';
+            } else {
+                htmlClass.add('dark');
+                icon.setAttribute('data-lucide', 'moon');
+                theme = 'dark';
+            }
+            lucide.createIcons();
+            
+            // Re-render charts automatically to refresh axes labels colors based on system themes
+            renderCharts();
+        }
+
+        // Self-contained customizable UI interactive alerts (Replacement for Native Browser Alerts)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            // Hide after threshold interval
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Execute entry routine elements onload
+        window.onload = function() {
+            // Initializing system icon styles library context
+            lucide.createIcons();
+            // Start simulation records on initial window paint
+            generateFreshDataset();
+        };
+    </script>
+</body>
+</html>
