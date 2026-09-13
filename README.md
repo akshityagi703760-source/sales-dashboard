@@ -2,7 +2,7 @@
 
 A high-fidelity, responsive Sales Performance Dashboard built using **Vanilla JavaScript**, **Tailwind CSS**, and **Chart.js**. This project demonstrates advanced frontend concepts like reactive state management, dynamic UI rendering, chart lifecycle management, and client-side data exporting—all implemented without external JavaScript frameworks.
 
-▶️ **[Live Demo Link](https://akshityagi703760-source.github.io/sales-dashboard/)** *(Replace with your exact live link if different)*
+▶️ **[Live Demo Link](https://akshityagi703760-source.github.io/sales-dashboard/)** 
 
 ---
 
